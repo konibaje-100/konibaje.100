@@ -58,7 +58,7 @@ const placeOrderStripe = async (req, res) => {
             items,
             address,
             amount,
-            paymentMethod: "Stripe",
+            paymentMethod: "Paystack",
             payment: false,
             date: Date.now(),
         };
