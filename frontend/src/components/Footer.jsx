@@ -9,7 +9,7 @@ const Footer = () => {
         <div>
             <img src={assets.logo} className='mb-5 w-32' alt="" />
             <p className='w-full md:w-2/3 text-gray-600'>
-                Lorem ipsum dolor sit, amet consectetur adipisicing elit. Commodi ad maxime quis! Facere autem cumque, quas harum sint ratione dicta iste voluptatum reiciendis consequatur nostrum, corporis, perspiciatis eaque maxime ab.
+            Konibaje is more than just a clothing brand—it’s a celebration of resilience, hope, and individuality. Inspired by the Yoruba phrase meaning "it won’t spoil," we create designs that inspire confidence, positivity, and style. Wear hope. Spread the energy. Stay unique.
             </p>
         </div>
         <div>

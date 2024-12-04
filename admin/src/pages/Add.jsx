@@ -15,7 +15,7 @@ const Add = ({token}) => {
     const [description, setDescription] = useState("");
     const [price, setPrice] = useState("");
     const [category, setCategory] = useState("Men");
-    const [subCategory, setSubCategory] = useState("Topwear");
+    const [subCategory, setSubCategory] = useState("T-Shirt");
     const [bestseller, setBestseller] = useState(false);
     const [sizes,setSizes] = useState([]);
 
@@ -107,14 +107,16 @@ const Add = ({token}) => {
             </div>
             <div>
                 <p className='mb-2'>Sub category</p>
-                <select onChange={()=>setSubCategory(e.target.value)} className='w-full px-3 py-2'>
-                    <option value="Topwear">Topwear</option>
-                    <option value="Bottomwear">Bottomwear</option>
-                    <option value="Winterwear">Winterwear</option>
+                <select onChange={(e)=>setSubCategory(e.target.value)} className='w-full px-3 py-2'>
+                    <option value="T-Shirt">T-Shirt</option>
+                    <option value="Sweatshirt">Sweatshirt</option>
+                    <option value="Hoodies">Hoodies</option>
+                    <option value="Shorts">Shorts</option>
+                    <option value="Trousers">Trousers</option>
                 </select>
             </div>
             <div>
-                <p className='mb-2'>Product Prize</p>
+                <p className='mb-2'>Product Price</p>
                 <input onChange={(e)=>setPrice(e.target.value)} value={price} className='w-full px-3 py-2 sm:w-[120px]' type="number" placeholder='25' />
             </div>
         </div>

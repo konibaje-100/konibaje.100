@@ -57,7 +57,8 @@ import p_img52 from './p_img52.png'
 
 import logo from './logo.png'
 import hero_img from './hero_img.png'
-import heros_img from './hero_img.png.jpg'
+import heros_img from './hero_img.jpg'
+import hero2_img from './hero2_img.jpg'
 import cart_icon from './cart_icon.png'
 import bin_icon from './bin_icon.png'
 import dropdown_icon from './dropdown_icon.png'
@@ -71,7 +72,7 @@ import support_img from './support_img.png'
 import menu_icon from './menu_icon.png'
 import about_img from './about_img.png'
 import abouts_img from './about_img.jpg'
-import contact_img from './contact_img.png'
+import contact_img from './contact_img.jpg'
 import razorpay_logo from './razorpay_logo.png'
 import stripe_logo from './stripe_logo.png'
 import cross_icon from './cross_icon.png'
@@ -80,6 +81,7 @@ export const assets = {
     logo,
     hero_img,
     heros_img,
+    hero2_img,
     cart_icon,
     dropdown_icon,
     exchange_icon,

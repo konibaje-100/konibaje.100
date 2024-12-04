@@ -1,14 +1,20 @@
-
+import paystackAPI from 'paystack-api';
 import  orderModel from '../models/orderModel.js';
 import userModel from '../models/userModel.js';
-import Stripe from 'stripe';
+import CoinPayments from 'coinpayments';
+
 
 // global variables
-const currency = 'usd'
+const currency = 'NGN'
 const deliveryCharge = 10
 
+
 // gateway initialize
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
+const paystack = paystackAPI(process.env.PAYSTACK_SECRET_KEY);
+const coinPaymentsClient = new CoinPayments({
+    key: process.env.COINPAYMENTS_PUBLIC_KEY,
+    secret: process.env.COINPAYMENTS_PRIVATE_KEY,
+  });
 
 // placing order using cod method
 const placeOrder = async (req,res) => {
@@ -40,88 +46,151 @@ const placeOrder = async (req,res) => {
 
 }
 
-// placing order using stripe method
-const placeOrderStripe = async (req,res) => {
-
+// placing order using Stripe method
+const placeOrderStripe = async (req, res) => {
     try {
-        
         const { userId, items, amount, address } = req.body;
-        const { origin } = req.headers
+        const { origin } = req.headers;
 
+        // Create order in the database
         const orderData = {
             userId,
             items,
             address,
             amount,
-            paymentMethod:"Stripe",
-            payment:false,
-            date: Date.now()
-        }
+            paymentMethod: "Stripe",
+            payment: false,
+            date: Date.now(),
+        };
 
-        const newOrder = new orderModel(orderData) 
-        await newOrder.save()
+        const newOrder = new orderModel(orderData);
+        await newOrder.save();
 
-        const line_items = items.map((item) => ({
-            price_data: {
-                currency:currency,
-                product_data: {
-                    name:item.name
-                },
-                unit_amount: item.price * 100
+        // Calculate total amount (sum of item prices and delivery charge)
+        const totalAmount =
+            items.reduce((sum, item) => sum + item.price * item.quantity, 0) +
+            deliveryCharge;
+
+        // Initialize Paystack payment
+        const response = await paystack.transaction.initialize({
+            email: address.email, // Paystack requires the user's email
+            amount: totalAmount * 100, // Convert to kobo
+            currency: currency,
+            metadata: {
+                cancel_action: `${origin}/verify?success=false&orderId=${newOrder._id}`,
             },
-            quantity: item.quantity
-        }))
+            callback_url: `${origin}/verify?success=true&orderId=${newOrder._id}`,
+        });
 
-        line_items.push({
-            price_data: {
-                currency: currency,
-                product_data: {
-                    name: 'Delivery Charges'
-                },
-                unit_amount: deliveryCharge * 100
-            },
-            quantity: 1
-        })
-
-        const session = await stripe.checkout.sessions.create({
-            success_url: `${origin}/verify?success=true&orderId=${newOrder._id}`,
-            cancel_url: `${origin}/verify?success=false&orderId=${newOrder._id}`,
-            line_items,
-            mode: 'payment',
-        })
-
-        res.json({success:true,session_url:session.url})
-
+        // Return session URL to frontend
+        res.json({ success: true, session_url: response.data.authorization_url });
     } catch (error) {
-        console.log(error);
-        res.json({success:false,message:error.message})
+        console.error(error);
+        res.json({ success: false, message: error.message });
     }
+};
 
-}
-
-// Verify stripe
-const verifyStripe = async (req,res) => {
-    const { orderId, success, userId} = req.body
+// Verify Paystack Payment
+const verifyStripe = async (req, res) => {
+    const { orderId, success, userId, reference } = req.body;
 
     try {
+        // Proceed with verification if payment success is "true"
         if (success === "true") {
-            await orderModel.findByIdAndUpdate(orderId, {payment:true});
-            await userModel.findByIdAndUpdate(userId, {cartData: {}})
-            res.json({success: true});
+            // Verify the transaction on Paystack with the reference
+            const response = await paystack.transaction.verify({ reference });
+
+            // Check if Paystack response indicates success
+            if (response.data.status === "success") {
+                // Update order and user data if payment is successful
+                await orderModel.findByIdAndUpdate(orderId, { payment: true });
+                await userModel.findByIdAndUpdate(userId, { cartData: {} });
+                res.json({ success: true });
+            } else {
+                // If Paystack verification failed
+                res.json({ success: false, message: "Payment verification failed" });
+            }
         } else {
-            await orderModel.findByIdAndDelete(orderId)
-            res.json({success:false})
+            // If success is not "true", delete the order
+            await orderModel.findByIdAndDelete(orderId);
+            res.json({ success: false });
         }
     } catch (error) {
-        console.log(error);
-        res.json({success:false,message:error.message})
+        console.error(error);
+        res.json({ success: false, message: error.message });
     }
-}
+};
+
 
 // placing order using razorpay method
-const placeOrderRazorpay = async (req,res) => {
+const placeOrderRazorpay = async (req, res) => {
+  try {
+    const { userId, items, amount, address } = req.body;
+    const { origin } = req.headers;
 
-}
+    // Create order in the database
+    const orderData = {
+      userId,
+      items,
+      address,
+      amount,
+      paymentMethod: "Razorpay", // Should be "Razorpay" for the case
+      payment: false,
+      date: Date.now(),
+    };
+
+    const newOrder = new orderModel(orderData);
+    await newOrder.save();
+
+    // Calculate the total amount in USD (or another currency CoinPayments accepts)
+    const totalAmount = amount; // Adjust currency conversion if necessary
+
+    // Create a CoinPayments transaction
+    const transaction = await coinPaymentsClient.createTransaction({
+      currency1: 'NGN', // Currency from your platform
+      currency2: 'LTC', // Currency to receive
+      amount: totalAmount,
+      buyer_email: address.email,
+      item_name: `Order ${newOrder._id}`,
+      custom: newOrder._id.toString(),
+      success_url: `${origin}/verify?success=true&orderId=${newOrder._id}`,
+      cancel_url: `${origin}/verify?success=false&orderId=${newOrder._id}`,
+    });
+
+    res.json({ success: true, payment_url: transaction.checkout_url });
+  } catch (error) {
+    console.error(error);
+    res.json({ success: false, message: error.message });
+  }
+};
+
+const verifyRazor = async (req, res) => {
+    const { orderId, success, userId, txn_id } = req.body;
+  
+    try {
+      if (success === "true") {
+        // Verify the transaction
+        const response = await coinPaymentsClient.getTx({ txid: txn_id });
+        await newOrder.save();
+        if (response.status === 100) {
+          // Update order and user data if payment is successful
+          await orderModel.findByIdAndUpdate(orderId, { payment: true });
+          await userModel.findByIdAndUpdate(userId, { cartData: {} });
+          res.json({ success: true });
+        } else {
+          res.json({ success: false, message: "Payment verification failed" });
+        }
+      } else {
+        // If success is not "true", delete the order
+        await orderModel.findByIdAndDelete(orderId);
+        res.json({ success: false });
+      }
+    } catch (error) {
+      console.error(error);
+      res.json({ success: false, message: error.message });
+    }
+  };
+  
 
 // All orders data for admin panel
 const allOrders = async (req,res) => {
@@ -170,4 +239,4 @@ const updateStatus = async (req,res) => {
 
 }
 
-export { placeOrder, placeOrderStripe, placeOrderRazorpay, allOrders, userOrders, updateStatus }
+export { placeOrder, placeOrderStripe, placeOrderRazorpay, allOrders, userOrders, updateStatus, verifyStripe, verifyRazor }

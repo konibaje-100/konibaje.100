@@ -85,6 +85,21 @@ const PlaceOrder = () => {
           }
           break
 
+        case 'razorpay':
+            const responseRazorpay = await axios.post(
+              backendUrl + '/api/order/razorpay',
+              orderData,
+              { headers: { token } }
+            );
+            if (responseRazorpay.data.success) {
+              const { payment_url } = responseRazorpay.data;
+              window.location.replace(payment_url);
+            } else {
+              toast.error(responseRazorpay.data.message);
+            }
+            break;
+          
+
         default:
           break;
       }

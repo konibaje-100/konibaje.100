@@ -9,10 +9,14 @@ const Cart = () => {
     useContext(ShopContext);
 
   const [cartData, seCartData] = useState([]);
+  const [showPasscode, setShowPasscode] = useState(false);
+  const [enteredPasscode, setEnteredPasscode] = useState("");
 
   useEffect(() => {
     if (products.length > 0) {
       const tempData = [];
+      let hasBestseller = false;
+
       for (const items in cartItems) {
         for (const item in cartItems[items]) {
           if (cartItems[items][item] > 0) {
@@ -21,13 +25,41 @@ const Cart = () => {
               size: item,
               quantity: cartItems[items][item],
             });
+
+            const productData = products.find(
+              (product) => product._id === items
+            );
+            if (productData && productData.bestseller) {
+              hasBestseller = true;
+            }
           }
         }
       }
+
+      // If a bestseller is found, show passcode input
+      setShowPasscode(hasBestseller);
       seCartData(tempData);
     }
   }, [cartItems, products]);
 
+  const handlePasscodeChange = (e) => {
+    setEnteredPasscode(e.target.value);
+  };
+
+  const handleCheckout = () => {
+    if (showPasscode) {
+      // Validate passcode if there are bestseller products
+      if (enteredPasscode === "KONIBAJE") {
+        navigate("/place-order");
+      } else {
+        alert("Incorrect passcode.");
+      }
+    } else {
+      // Allow checkout if there are no bestseller products
+      navigate("/place-order");
+    }
+  };
+  
   return (
     <div className="border-t pt-14">
       <div className=" text-2xl mb-3">
@@ -95,8 +127,17 @@ const Cart = () => {
         <div className="w-full sm:w-[450px]">
           <CartTotal />
           <div className="w-full text-end">
+            {showPasscode && (
+              <input
+                type="text"
+                className="bg-gray-700 text-white text-sm my-8 px-5 py-3"
+                placeholder="PASSCODE"
+                value={enteredPasscode}
+                onChange={handlePasscodeChange}
+              />
+            )}
             <button
-              onClick={() => navigate("/place-order")}
+              onClick={handleCheckout}
               className="bg-black text-white text-sm my-8 px-8 py-3"
             >
               PROCEED TO CHECKOUT
