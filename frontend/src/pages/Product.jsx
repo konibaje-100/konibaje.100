@@ -79,9 +79,9 @@ const Product = () => {
           </div>
           <div className='flex flex-col gap-4 border px-6 py-6 text-sm text-gray-500'>
             <p>
-              Lorem ipsum dolor sit amet, consectetur adipisicing elit. Minus nam blanditiis molestiae, ullam tempora nisi ducimus tempore facilis dolor nesciunt ab. Dicta nobis, culpa omnis aliquid dolor velit provident quidem quis eum sint nisi illo recusandae perspiciatis consequatur odit harum consectetur magni repellat id in non laboriosam aut blanditiis cum!
+            Step into effortless style and unbeatable comfort with this premium cotton graphic tee. Made from 100% breathable cotton, it’s soft, lightweight, and perfect for all-day wear. Featuring a bold, eye-catching graphic print, this shirt adds a touch of personality to any outfit. Whether you’re dressing it up with a jacket or keeping it casual with jeans, it’s a versatile addition to your wardrobe. Designed with attention to detail, it offers a relaxed fit that complements all body types. Durable and easy to care for, this tee is a must-have for anyone who values style and comfort in one package.
             </p>
-            <p>Lorem ipsum dolor sit, amet consectetur adipisicing elit. At explicabo dolorem possimus veritatis architecto nihil sunt in commodi dignissimos asperiores, quo ipsam labore deleniti quibusdam!</p>
+            
           </div>
       </div>
         
