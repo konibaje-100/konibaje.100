@@ -14,7 +14,7 @@ const Contact = () => {
           <div className='flex flex-col justify-center items-start gap-6'>
               <p className='font-semibold text-xl text-gray-600'>Our Store</p>
               <p className=' text-gray-500'>Ikate Lekki,<br /> Lagos, Nigeria </p>
-              <p className=' text-gray-500'>Tel: +23400000000 <br /> Email: admin@konibaje100.com </p>
+              <p className=' text-gray-500'>Tel: +23400000000 <br /> Email: support@konibaje100.com </p>
           </div>
       </div>
       <NewsLetterBox/>
