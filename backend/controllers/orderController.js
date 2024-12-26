@@ -2,6 +2,7 @@ import paystackAPI from 'paystack-api';
 import  orderModel from '../models/orderModel.js';
 import userModel from '../models/userModel.js';
 import CoinPayments from 'coinpayments';
+import nodemailer from 'nodemailer';
 
 
 // global variables
@@ -46,7 +47,6 @@ const placeOrder = async (req,res) => {
 
 }
 
-// placing order using Stripe method
 const placeOrderStripe = async (req, res) => {
     try {
         const { userId, items, amount, address } = req.body;
@@ -82,6 +82,26 @@ const placeOrderStripe = async (req, res) => {
             callback_url: `${origin}/verify?success=true&orderId=${newOrder._id}`,
         });
 
+        // Send Email to Admin
+        const transporter = nodemailer.createTransport({
+            host: 'smtp.zoho.com',
+            port: 465,
+            secure: true, // Use SSL
+            auth: {
+                user: 'support@konibaje100.com', // Replace with your Zoho email
+                pass: 'bkCf9Phfe1kP',     // Replace with your Zoho email password or app-specific password
+            },
+        });
+
+        const mailOptions = {
+            from: 'support@konibaje100.com', // Sender's email
+            to: 'konibaje100@gmail.com',   // Admin's email
+            subject: 'New Order Received',
+            text: `You have received a new order with Order ID: ${newOrder._id}. Please check the admin panel for details.`,
+        };
+
+        await transporter.sendMail(mailOptions);
+
         // Return session URL to frontend
         res.json({ success: true, session_url: response.data.authorization_url });
     } catch (error) {
@@ -89,6 +109,7 @@ const placeOrderStripe = async (req, res) => {
         res.json({ success: false, message: error.message });
     }
 };
+
 
 // Verify Paystack Payment
 const verifyStripe = async (req, res) => {

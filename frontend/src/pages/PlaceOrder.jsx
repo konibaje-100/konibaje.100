@@ -17,6 +17,7 @@ const PlaceOrder = () => {
     getCartAmount,
     delivery_fee,
     products,
+    updateDeliveryFee,
   } = useContext(ShopContext);
   const [formData, setFormData] = useState({
     firstName: "",
@@ -35,7 +36,12 @@ const PlaceOrder = () => {
     const value = event.target.value;
 
     setFormData((data) => ({ ...data, [name]: value }));
-  };
+
+    if (name === "state") {
+        updateDeliveryFee(value); // Update the delivery fee dynamically
+    }
+};
+
 
   const onSubmitHandler = async (event) => {
     event.preventDefault();
