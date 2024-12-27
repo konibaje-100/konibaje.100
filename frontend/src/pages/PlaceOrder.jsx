@@ -17,7 +17,6 @@ const PlaceOrder = () => {
     getCartAmount,
     delivery_fee,
     products,
-    updateDeliveryFee,
   } = useContext(ShopContext);
   const [formData, setFormData] = useState({
     firstName: "",
@@ -36,18 +35,13 @@ const PlaceOrder = () => {
     const value = event.target.value;
 
     setFormData((data) => ({ ...data, [name]: value }));
-
-    if (name === "state") {
-        updateDeliveryFee(value); // Update the delivery fee dynamically
-    }
-};
-
+  };
 
   const onSubmitHandler = async (event) => {
     event.preventDefault();
     try {
       let orderItems = [];
-
+  
       for (const items in cartItems) {
         for (const item in cartItems[items]) {
           if (cartItems[items][item] > 0) {
@@ -62,58 +56,72 @@ const PlaceOrder = () => {
           }
         }
       }
-
+  
+      // Dynamically adjust the delivery fee based on the state
+      let adjustedDeliveryFee = delivery_fee; // Default fee
+      if (formData.state.toLowerCase() === "lagos") {
+        adjustedDeliveryFee = 4000; // Adjusted fee for Lagos
+      }
+  
+      // Calculate order data with the updated delivery fee
       let orderData = {
         address: formData,
         items: orderItems,
-        amount: getCartAmount() + delivery_fee,
+        amount: getCartAmount() + adjustedDeliveryFee,
       };
-
+  
       switch (method) {
-        // API Calls for Cod
         case "cod":
-          const response = await axios.post(backendUrl + '/api/order/place', orderData, {headers:{token}})
+          const response = await axios.post(
+            backendUrl + '/api/order/place',
+            orderData,
+            { headers: { token } }
+          );
           if (response.data.success) {
-              setCartItems({})
-              navigate('/orders')
-          } else{
-            toast.error(response.data.message)
+            setCartItems({});
+            navigate('/orders');
+          } else {
+            toast.error(response.data.message);
           }
           break;
-
+  
         case 'stripe':
-          const responseStripe = await axios.post(backendUrl + '/api/order/stripe',orderData,{headers:{token}})
-          if (responseStripe.data.success){
-            const {session_url} = responseStripe.data
-            window.location.replace(session_url)
-          }else{
-            toast.error(responseStripe.data.message)
+          const responseStripe = await axios.post(
+            backendUrl + '/api/order/stripe',
+            orderData,
+            { headers: { token } }
+          );
+          if (responseStripe.data.success) {
+            const { session_url } = responseStripe.data;
+            window.location.replace(session_url);
+          } else {
+            toast.error(responseStripe.data.message);
           }
-          break
-
+          break;
+  
         case 'razorpay':
-            const responseRazorpay = await axios.post(
-              backendUrl + '/api/order/razorpay',
-              orderData,
-              { headers: { token } }
-            );
-            if (responseRazorpay.data.success) {
-              const { payment_url } = responseRazorpay.data;
-              window.location.replace(payment_url);
-            } else {
-              toast.error(responseRazorpay.data.message);
-            }
-            break;
-          
-
+          const responseRazorpay = await axios.post(
+            backendUrl + '/api/order/razorpay',
+            orderData,
+            { headers: { token } }
+          );
+          if (responseRazorpay.data.success) {
+            const { payment_url } = responseRazorpay.data;
+            window.location.replace(payment_url);
+          } else {
+            toast.error(responseRazorpay.data.message);
+          }
+          break;
+  
         default:
           break;
       }
     } catch (error) {
       console.log(error);
-      toast.error(error.message)
+      toast.error(error.message);
     }
   };
+  
 
   return (
     <form
