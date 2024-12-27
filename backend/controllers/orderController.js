@@ -59,19 +59,12 @@ const placeOrderStripe = async (req, res) => {
         const { userId, items, amount, address } = req.body;
         const { origin } = req.headers;
 
-        // Calculate delivery charge based on state
-        const deliveryCharge = calculateDeliveryCharge(address.state);
-
-        // Recalculate the total amount
-        const totalAmount =
-            items.reduce((sum, item) => sum + item.price * item.quantity, 0) +
-            deliveryCharge;
-
+        // Create order in the database
         const orderData = {
             userId,
             items,
             address,
-            amount: totalAmount,
+            amount,
             paymentMethod: "Paystack",
             payment: false,
             date: Date.now(),
@@ -80,9 +73,15 @@ const placeOrderStripe = async (req, res) => {
         const newOrder = new orderModel(orderData);
         await newOrder.save();
 
+        // Calculate total amount (sum of item prices and delivery charge)
+        const totalAmount =
+            items.reduce((sum, item) => sum + item.price * item.quantity, 0) +
+            deliveryCharge;
+
+        // Initialize Paystack payment
         const response = await paystack.transaction.initialize({
-            email: address.email,
-            amount: totalAmount * 100,
+            email: address.email, // Paystack requires the user's email
+            amount: totalAmount * 100, // Convert to kobo
             currency: currency,
             metadata: {
                 cancel_action: `${origin}/verify?success=false&orderId=${newOrder._id}`,
@@ -90,13 +89,33 @@ const placeOrderStripe = async (req, res) => {
             callback_url: `${origin}/verify?success=true&orderId=${newOrder._id}`,
         });
 
+        // Send Email to Admin
+        const transporter = nodemailer.createTransport({
+            host: 'smtp.zoho.com',
+            port: 465,
+            secure: true, // Use SSL
+            auth: {
+                user: 'support@konibaje100.com', // Replace with your Zoho email
+                pass: 'bkCf9Phfe1kP',     // Replace with your Zoho email password or app-specific password
+            },
+        });
+
+        const mailOptions = {
+            from: 'support@konibaje100.com', // Sender's email
+            to: 'konibaje100@gmail.com',   // Admin's email
+            subject: 'New Order Received',
+            text: `You have received a new order with Order ID: ${newOrder._id}. Please check the admin panel for details.`,
+        };
+
+        await transporter.sendMail(mailOptions);
+
+        // Return session URL to frontend
         res.json({ success: true, session_url: response.data.authorization_url });
     } catch (error) {
         console.error(error);
         res.json({ success: false, message: error.message });
     }
 };
-
 
 
 // Verify Paystack Payment
