@@ -52,6 +52,7 @@ const placeOrder = async (req,res) => {
 
 };
 
+// Place Order Stripe (No email sending here)
 const placeOrderStripe = async (req, res) => {
     try {
         const { userId, items, amount, address } = req.body;
@@ -90,26 +91,6 @@ const placeOrderStripe = async (req, res) => {
             },
         });
 
-        // Send Email to Admin
-        const transporter = nodemailer.createTransport({
-            host: 'smtp.zoho.com',
-            port: 465,
-            secure: true, // Use SSL
-            auth: {
-                user: 'support@konibaje100.com', // Replace with your Zoho email
-                pass: 'bkCf9Phfe1kP',     // Replace with your Zoho email password or app-specific password
-            },
-        });
-
-        const mailOptions = {
-            from: 'support@konibaje100.com', // Sender's email
-            to: 'konibaje100@gmail.com',   // Admin's email
-            subject: 'New Order Received',
-            text: `You have received a new order with Order ID: ${newOrder._id}. Please check the admin panel for details.`,
-        };
-
-        await transporter.sendMail(mailOptions);
-
         // Return session URL to frontend
         res.json({ success: true, session_url: response.data.authorization_url });
     } catch (error) {
@@ -118,7 +99,7 @@ const placeOrderStripe = async (req, res) => {
     }
 };
 
-// Verify Paystack Payment
+// Verify Paystack Payment and Send Email on Success
 const verifyStripe = async (req, res) => {
     const { orderId, success, userId, reference } = req.body;
 
@@ -133,6 +114,27 @@ const verifyStripe = async (req, res) => {
                 // Update order and user data if payment is successful
                 await orderModel.findByIdAndUpdate(orderId, { payment: true });
                 await userModel.findByIdAndUpdate(userId, { cartData: {} });
+
+                // Send Email to Admin on success
+                const transporter = nodemailer.createTransport({
+                    host: 'smtp.zoho.com',
+                    port: 465,
+                    secure: true, // Use SSL
+                    auth: {
+                        user: 'support@konibaje100.com', // Replace with your Zoho email
+                        pass: 'bkCf9Phfe1kP',     // Replace with your Zoho email password or app-specific password
+                    },
+                });
+
+                const mailOptions = {
+                    from: 'support@konibaje100.com', // Sender's email
+                    to: 'konibaje100@gmail.com',   // Admin's email
+                    subject: 'New Order Received',
+                    text: `You have received a new order with Order ID: ${orderId}. Please check the admin panel for details.`,
+                };
+
+                await transporter.sendMail(mailOptions);
+
                 res.json({ success: true });
             } else {
                 // If Paystack verification failed
@@ -148,6 +150,7 @@ const verifyStripe = async (req, res) => {
         res.json({ success: false, message: error.message });
     }
 };
+
 
 // placing order using razorpay method
 const placeOrderRazorpay = async (req, res) => {
