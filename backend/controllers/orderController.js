@@ -6,11 +6,11 @@ import nodemailer from 'nodemailer';
 
 // global variables
 const currency = 'NGN';
-const deliveryCharge = 10;
+
 
 const calculateDeliveryCharge = (state) => {
     if (state.toLowerCase() === "lagos") {
-        return 1000; // Delivery charge for Lagos state
+        return 4000; // Delivery charge for Lagos state
     }
     return 10000; // Default delivery charge for other states
 };

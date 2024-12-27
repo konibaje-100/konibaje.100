@@ -27,6 +27,9 @@ const CartTotal = () => {
             <b>Total</b>
             <b>{currency} {getCartAmount() === 0 ? 0 : getCartAmount() + delivery_fee}.00 </b>
         </div>
+        <div className='flex justify-between'>
+            <p>Note all deliveries within Lagos is {currency}4,000 and will be updated automatically at checkout </p>
+        </div>
       </div>
     </div>
   )
