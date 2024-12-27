@@ -1,13 +1,12 @@
 import paystackAPI from 'paystack-api';
-import  orderModel from '../models/orderModel.js';
+import orderModel from '../models/orderModel.js';
 import userModel from '../models/userModel.js';
 import CoinPayments from 'coinpayments';
 import nodemailer from 'nodemailer';
 
-
 // global variables
-const currency = 'NGN'
-const deliveryCharge = 10
+const currency = 'NGN';
+const deliveryCharge = 10;
 
 const calculateDeliveryCharge = (state) => {
     if (state.toLowerCase() === "lagos") {
@@ -16,13 +15,12 @@ const calculateDeliveryCharge = (state) => {
     return 10000; // Default delivery charge for other states
 };
 
-
 // gateway initialize
 const paystack = paystackAPI(process.env.PAYSTACK_SECRET_KEY);
 const coinPaymentsClient = new CoinPayments({
     key: process.env.COINPAYMENTS_PUBLIC_KEY,
     secret: process.env.COINPAYMENTS_PRIVATE_KEY,
-  });
+});
 
 // placing order using cod method
 const placeOrder = async (req,res) => {
@@ -38,21 +36,21 @@ const placeOrder = async (req,res) => {
             paymentMethod:"COD",
             payment:false,
             date: Date.now()
-        }
+        };
 
-        const newOrder = new orderModel(orderData) 
-        await newOrder.save()
+        const newOrder = new orderModel(orderData); 
+        await newOrder.save();
 
-        await userModel.findByIdAndUpdate(userId,{cartData:{}})
+        await userModel.findByIdAndUpdate(userId,{cartData:{}});
 
-        res.json({success:true, message:"Order Placed"})
+        res.json({success:true, message:"Order Placed"});
 
     } catch (error) {
         console.log(error);
-        res.json({success:false,message:error.message})
+        res.json({success:false,message:error.message});
     }
 
-}
+};
 
 const placeOrderStripe = async (req, res) => {
     try {
@@ -73,10 +71,13 @@ const placeOrderStripe = async (req, res) => {
         const newOrder = new orderModel(orderData);
         await newOrder.save();
 
+        // Calculate delivery charge based on state
+        const deliveryChargeAmount = calculateDeliveryCharge(address.state);
+
         // Calculate total amount (sum of item prices and delivery charge)
         const totalAmount =
             items.reduce((sum, item) => sum + item.price * item.quantity, 0) +
-            deliveryCharge;
+            deliveryChargeAmount;
 
         // Initialize Paystack payment
         const response = await paystack.transaction.initialize({
@@ -85,8 +86,8 @@ const placeOrderStripe = async (req, res) => {
             currency: currency,
             metadata: {
                 cancel_action: `${origin}/verify?success=false&orderId=${newOrder._id}`,
+                callback_url: `${origin}/verify?success=true&orderId=${newOrder._id}`,
             },
-            callback_url: `${origin}/verify?success=true&orderId=${newOrder._id}`,
         });
 
         // Send Email to Admin
@@ -116,7 +117,6 @@ const placeOrderStripe = async (req, res) => {
         res.json({ success: false, message: error.message });
     }
 };
-
 
 // Verify Paystack Payment
 const verifyStripe = async (req, res) => {
@@ -148,7 +148,6 @@ const verifyStripe = async (req, res) => {
         res.json({ success: false, message: error.message });
     }
 };
-
 
 // placing order using razorpay method
 const placeOrderRazorpay = async (req, res) => {
@@ -218,53 +217,40 @@ const verifyRazor = async (req, res) => {
       res.json({ success: false, message: error.message });
     }
   };
-  
 
 // All orders data for admin panel
 const allOrders = async (req,res) => {
-
     try {
-        const orders = await orderModel.find({})
-        res.json({success:true,orders})
+        const orders = await orderModel.find({});
+        res.json({success:true,orders});
     } catch (error) {
         console.log(error);
-        res.json({success:false,message:error.message})
+        res.json({success:false,message:error.message});
     }
-
-}
+};
 
 // User order data for frontend
 const userOrders = async (req,res) => {
-
     try {
-        
-        const { userId } = req.body
-
-        const orders = await orderModel.find({ userId })
-        res.json({success: true, orders})
-
+        const { userId } = req.body;
+        const orders = await orderModel.find({ userId });
+        res.json({success: true, orders});
     } catch (error) {
         console.log(error);
-        res.json({success:false,message:error.message})
+        res.json({success:false,message:error.message});
     }
-
-}
+};
 
 // Update orders status from admin panel
 const updateStatus = async (req,res) => {
-
     try {
-        
-        const { orderId, status } = req.body
-
-        await orderModel.findByIdAndUpdate(orderId, {status})
-        res.json({success:true,message:'Status Updated'})
-
+        const { orderId, status } = req.body;
+        await orderModel.findByIdAndUpdate(orderId, {status});
+        res.json({success:true,message:'Status Updated'});
     } catch (error) {
         console.log(error);
-        res.json({success:false,message:error.message})
+        res.json({success:false,message:error.message});
     }
+};
 
-}
-
-export { placeOrder, placeOrderStripe, placeOrderRazorpay, allOrders, userOrders, updateStatus, verifyStripe, verifyRazor }
+export { placeOrder, placeOrderStripe, placeOrderRazorpay, allOrders, userOrders, updateStatus, verifyStripe, verifyRazor };
