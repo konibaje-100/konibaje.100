@@ -5,9 +5,15 @@ import CoinPayments from 'coinpayments';
 
 
 // global variables
-const currency = 'NGN'
-const deliveryCharge = 10
+const currency = 'NGN';
 
+
+const calculateDeliveryCharge = (state) => {
+    if (state.toLowerCase() === "lagos") {
+        return 4000; // Delivery charge for Lagos state
+    }
+    return 10000; // Default delivery charge for other states
+};
 
 // gateway initialize
 const paystack = paystackAPI(process.env.PAYSTACK_SECRET_KEY);
@@ -66,10 +72,13 @@ const placeOrderStripe = async (req, res) => {
         const newOrder = new orderModel(orderData);
         await newOrder.save();
 
+        // Calculate delivery charge based on state
+        const deliveryChargeAmount = calculateDeliveryCharge(address.state);
+
         // Calculate total amount (sum of item prices and delivery charge)
         const totalAmount =
             items.reduce((sum, item) => sum + item.price * item.quantity, 0) +
-            deliveryCharge;
+            deliveryChargeAmount;
 
         // Initialize Paystack payment
         const response = await paystack.transaction.initialize({
