@@ -7,7 +7,13 @@ import nodemailer from 'nodemailer';
 
 // global variables
 const currency = 'NGN'
-const deliveryCharge = 10
+
+const calculateDeliveryCharge = (state) => {
+    if (state.toLowerCase() === "lagos") {
+        return 1000; // Delivery charge for Lagos state
+    }
+    return 10000; // Default delivery charge for other states
+};
 
 
 // gateway initialize
@@ -52,12 +58,19 @@ const placeOrderStripe = async (req, res) => {
         const { userId, items, amount, address } = req.body;
         const { origin } = req.headers;
 
-        // Create order in the database
+        // Calculate delivery charge based on state
+        const deliveryCharge = calculateDeliveryCharge(address.state);
+
+        // Recalculate the total amount
+        const totalAmount =
+            items.reduce((sum, item) => sum + item.price * item.quantity, 0) +
+            deliveryCharge;
+
         const orderData = {
             userId,
             items,
             address,
-            amount,
+            amount: totalAmount,
             paymentMethod: "Paystack",
             payment: false,
             date: Date.now(),
@@ -66,15 +79,9 @@ const placeOrderStripe = async (req, res) => {
         const newOrder = new orderModel(orderData);
         await newOrder.save();
 
-        // Calculate total amount (sum of item prices and delivery charge)
-        const totalAmount =
-            items.reduce((sum, item) => sum + item.price * item.quantity, 0) +
-            deliveryCharge;
-
-        // Initialize Paystack payment
         const response = await paystack.transaction.initialize({
-            email: address.email, // Paystack requires the user's email
-            amount: totalAmount * 100, // Convert to kobo
+            email: address.email,
+            amount: totalAmount * 100,
             currency: currency,
             metadata: {
                 cancel_action: `${origin}/verify?success=false&orderId=${newOrder._id}`,
@@ -109,6 +116,7 @@ const placeOrderStripe = async (req, res) => {
         res.json({ success: false, message: error.message });
     }
 };
+
 
 
 // Verify Paystack Payment
