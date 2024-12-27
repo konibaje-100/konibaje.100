@@ -7,6 +7,7 @@ import nodemailer from 'nodemailer';
 
 // global variables
 const currency = 'NGN'
+const deliveryCharge = 10
 
 const calculateDeliveryCharge = (state) => {
     if (state.toLowerCase() === "lagos") {
@@ -89,27 +90,6 @@ const placeOrderStripe = async (req, res) => {
             callback_url: `${origin}/verify?success=true&orderId=${newOrder._id}`,
         });
 
-        // Send Email to Admin
-        const transporter = nodemailer.createTransport({
-            host: 'smtp.zoho.com',
-            port: 465,
-            secure: true, // Use SSL
-            auth: {
-                user: 'support@konibaje100.com', // Replace with your Zoho email
-                pass: 'bkCf9Phfe1kP',     // Replace with your Zoho email password or app-specific password
-            },
-        });
-
-        const mailOptions = {
-            from: 'support@konibaje100.com', // Sender's email
-            to: 'konibaje100@gmail.com',   // Admin's email
-            subject: 'New Order Received',
-            text: `You have received a new order with Order ID: ${newOrder._id}. Please check the admin panel for details.`,
-        };
-
-        await transporter.sendMail(mailOptions);
-
-        // Return session URL to frontend
         res.json({ success: true, session_url: response.data.authorization_url });
     } catch (error) {
         console.error(error);
