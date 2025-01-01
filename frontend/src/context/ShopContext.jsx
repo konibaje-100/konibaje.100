@@ -14,6 +14,7 @@ const ShopContextProvider = (props) => {
     const [showSearch,setShowSearch] = useState(false);
     const [cartItems,setCartItems] = useState({});
     const [products,setProducts] = useState([]);
+    const [essentials,setEssentials] = useState([]);
     const [token,setToken] = useState('')
     const navigate = useNavigate();
 
@@ -123,6 +124,22 @@ const ShopContextProvider = (props) => {
             toast.error(error.message)
         }
     }
+    const getEssentialsData = async () => {
+        try {
+            
+            const response = await axios.get(backendUrl + '/api/product/listE')
+            if(response.data.success){
+                setEssentials(response.data.essentials)
+            }else{
+                toast.error(response.data.message)
+            }
+            
+
+        } catch (error) {
+            console.log(error);
+            toast.error(error.message)
+        }
+    }
 
     const getUserCart = async ( token ) => {
         try {
@@ -139,6 +156,7 @@ const ShopContextProvider = (props) => {
 
     useEffect(()=>{
         getProductsData()
+        getEssentialsData()
     },[])
     
     useEffect(()=>{
@@ -150,7 +168,7 @@ const ShopContextProvider = (props) => {
     
 
     const value = {
-        products, currency, delivery_fee,
+        essentials, products, currency, delivery_fee,
         search, setSearch, showSearch, setShowSearch, cartItems, addToCart,
         getCartCount, updateQuantity, getCartAmount,navigate,
         backendUrl, token, setToken, setCartItems

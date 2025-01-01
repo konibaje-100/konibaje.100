@@ -28,7 +28,11 @@ const Navbar = () => {
             <hr className='w-2/4 border-none h-[1.5px] bg-gray-700 hidden' />
         </NavLink>
         <NavLink to='/collection' className='flex flex-col items-center gap-1'>
-            <p>COLLECTION</p>
+            <p>HIGH-END</p>
+            <hr className='w-2/4 border-none h-[1.5px] bg-gray-700 hidden' />
+        </NavLink>
+        <NavLink to='/essentials' className='flex flex-col items-center gap-1'>
+            <p>ESSENTIALS</p>
             <hr className='w-2/4 border-none h-[1.5px] bg-gray-700 hidden' />
         </NavLink>
         <NavLink to='/about' className='flex flex-col items-center gap-1'>

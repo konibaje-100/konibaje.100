@@ -7,7 +7,7 @@ import RelatedProducts from '../components/RelatedProducts';
 const Product = () => {
 
   const {productId} = useParams();
-  const {products, currency, addToCart} = useContext(ShopContext);
+  const {products, essentials, currency, addToCart} = useContext(ShopContext);
   const [productData,setProductData] = useState(false);
   const [image,setImage] = useState('');
   const [size,setSize] = useState('')
@@ -15,6 +15,13 @@ const Product = () => {
   const fetchProductData = async () => {
 
     products.map((item)=>{
+      if (item._id === productId) {
+        setProductData(item)
+        setImage(item.image[0])
+        return null;
+      }
+    })
+    essentials.map((item)=>{
       if (item._id === productId) {
         setProductData(item)
         setImage(item.image[0])

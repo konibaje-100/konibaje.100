@@ -8,6 +8,8 @@ import Orders from "./pages/Orders";
 import Login from "./components/Login";
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import Essentials from "./pages/Essentials";
+import ListEssentials from "./pages/ListEssentials";
 
 export const backendUrl = import.meta.env.VITE_BACKEND_URL
 export const currency = '\u20A6';
@@ -33,8 +35,10 @@ const App = () => {
             <div className="w-[70%] mx-auto ml-[max(5vw,25px)] my-8 text-gray-600 text-base">
               <Routes>
                 <Route path="/add" element={<Add token={token} />} />
+                <Route path="/essentials" element={<Essentials token={token} />} />
                 <Route path="/list" element={<List token={token} />} />
                 <Route path="/order" element={<Orders token={token} />} />
+                <Route path="/listE" element={<ListEssentials token={token} />} />
               </Routes>
             </div>
           </div>
