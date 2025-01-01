@@ -91,22 +91,34 @@ const ShopContextProvider = (props) => {
     }
 
     const getCartAmount = () => {
-
         let totalAmount = 0;
-        for(const items in cartItems){
-            let itemInfo = products.find((product)=> product._id === items);
-            for(const item in cartItems[items]){
-                try {
-                    if (cartItems[items][item]> 0) {
-                        totalAmount += itemInfo.price * cartItems[items][item]
+    
+        for (const items in cartItems) {
+            // Check for the item in the products catalog
+            let itemInfo = products.find((product) => product._id === items);
+    
+            // If not found, check in the essentials catalog
+            if (!itemInfo) {
+                itemInfo = essentials.find((essential) => essential._id === items);
+            }
+    
+            // Calculate the total amount for the item
+            if (itemInfo) {
+                for (const item in cartItems[items]) {
+                    try {
+                        if (cartItems[items][item] > 0) {
+                            totalAmount += itemInfo.price * cartItems[items][item];
+                        }
+                    } catch (error) {
+                        console.error("Error calculating total amount:", error);
                     }
-                } catch (error) {
-                    
                 }
             }
         }
+    
         return totalAmount;
-    }
+    };
+    
 
     const getProductsData = async () => {
         try {
